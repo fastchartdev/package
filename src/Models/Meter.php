@@ -2,10 +2,9 @@
 
 namespace Fastchartdev\Package\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Fastchartdev\Package\Models\Event;
 use Fastchartdev\Package\Enums\AggregationEnum;
 use Fastchartdev\Package\Enums\PeriodTypeEnum;
+use Illuminate\Database\Eloquent\Model;
 
 class Meter extends Model
 {
