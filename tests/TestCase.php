@@ -2,9 +2,9 @@
 
 namespace Fastchartdev\Package\Tests;
 
+use Fastchartdev\Package\PackageServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Fastchartdev\Package\PackageServiceProvider;
 
 class TestCase extends Orchestra
 {

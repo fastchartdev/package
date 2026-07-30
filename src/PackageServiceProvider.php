@@ -2,9 +2,9 @@
 
 namespace Fastchartdev\Package;
 
+use Fastchartdev\Package\Commands\PackageCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider as BasePackageServiceProvider;
-use Fastchartdev\Package\Commands\PackageCommand;
 
 class PackageServiceProvider extends BasePackageServiceProvider
 {
