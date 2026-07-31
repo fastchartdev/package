@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['meter_id', 'scope_value', 'at'], 'unique_meter_scope_at');
-            $table->index(['meter_id', 'scope_value', 'at'], 'index_meter_scope_at');
+            // $table->index(['meter_id', 'scope_value', 'at'], 'index_meter_scope_at');
         });
     }
 

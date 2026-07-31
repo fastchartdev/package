@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class MeterSummary extends Model
 {
     protected $fillable = [
-        'id',
         'meter_id',
         'count',
         'scope_value',
@@ -24,6 +23,7 @@ class MeterSummary extends Model
         'meter_id' => 'integer',
         'count' => 'integer',
         'value' => 'decimal:2',
+        'at' => 'integer',
         'start_at' => 'datetime:Y-m-d H:i:s',
         'end_at' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',

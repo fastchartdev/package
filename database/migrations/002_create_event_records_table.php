@@ -21,10 +21,10 @@ return new class extends Migration
             $table->timestamp('timestamp');
             $table->string('scope_value');
             $table->string('status');
-            $table->timestamp('started_at');
-            $table->timestamp('completed_at');
-            $table->timestamp('failed_at');
-            $table->string('failure_reason');
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('completed_at')->nullable();
+            $table->timestamp('failed_at')->nullable();
+            $table->string('failure_reason')->nullable();
             $table->timestamps();
         });
     }

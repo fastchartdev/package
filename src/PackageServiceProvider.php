@@ -19,7 +19,7 @@ class PackageServiceProvider extends BasePackageServiceProvider
             ->name('package')
             ->hasConfigFile('fastchart')
             ->hasViews()
-            ->hasMigrations(['001_create_events_table', '002_create_meters_table', '003_create_event_records_table', '004_create_meter_summaries_table'])
+            ->hasMigrations(['001_create_events_table', '002_create_event_records_table', '003_create_meters_table', '004_create_meter_summaries_table'])
             ->hasCommand(PackageCommand::class);
     }
 }

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['event_id', 'aggregation', 'period_type'], 'unique_event_aggregation_period');
-            $table->index(['event_id', 'aggregation', 'period_type'], 'index_event_aggregation_period');
+            // $table->index(['event_id', 'aggregation', 'period_type'], 'index_event_aggregation_period');
         });
     }
 
