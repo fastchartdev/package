@@ -4,12 +4,13 @@ namespace Fastchartdev\Package;
 
 use Carbon\CarbonPeriod;
 
-class Package {
+class Package
+{
     public function generateAtFromRange(string $startAt, string $endAt, string $periodType)
     {
         $period = CarbonPeriod::create(
             ($startAt),
-            '1 ' . $periodType,
+            '1 '.$periodType,
             ($endAt)
         );
 

@@ -10,16 +10,16 @@ use Fastchartdev\Package\Facades\Package;
 use Fastchartdev\Package\Models\EventRecord;
 use Fastchartdev\Package\Models\Meter;
 use Fastchartdev\Package\Models\MeterSummary;
+use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
-use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class RecordEventJob implements ShouldQueue, ShouldBeUnique
+class RecordEventJob implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
 
@@ -61,11 +61,11 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
     {
         $eventRecord = EventRecord::find($this->eventRecordId);
 
-        if (!$eventRecord) {
+        if (! $eventRecord) {
             return [
-                (new WithoutOverlapping('RecordEventJob:' . $this->eventRecordId))
+                (new WithoutOverlapping('RecordEventJob:'.$this->eventRecordId))
                     ->releaseAfter(rand(30, 60)) // Retry after a random time between 30 and 60 seconds
-                    ->shared()
+                    ->shared(),
             ];
         }
 
@@ -74,10 +74,10 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
         $releaseAfter = rand(30, 60);
 
         $return = [
-            (new WithoutOverlapping('RecordEventJob:' . $this->eventRecordId))
+            (new WithoutOverlapping('RecordEventJob:'.$this->eventRecordId))
                 ->releaseAfter($releaseAfter) // Retry after a random time between 30 and 60 seconds
                 ->shared(),
-            (new WithoutOverlapping('RecordEventJob:event-' . $event->id . ',scope_value-' . $eventRecord->scope_value))
+            (new WithoutOverlapping('RecordEventJob:event-'.$event->id.',scope_value-'.$eventRecord->scope_value))
                 ->releaseAfter($releaseAfter) // Retry after a random time between 30 and 60 seconds
                 ->shared(),
         ];
@@ -89,7 +89,7 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
     {
         return [
             'event-record',
-            'event-record:' . $this->eventRecordId,
+            'event-record:'.$this->eventRecordId,
         ];
     }
 
@@ -104,6 +104,7 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
 
         if ($eventRecord && $eventRecord->status === EventRecordStatusEnum::COMPLETED) {
             Package::debug("[RecordEventJob] Event record ID {$this->eventRecordId} is already completed. Skipping.");
+
             return;
         }
 
@@ -127,6 +128,7 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
                         'failed_at' => now(),
                         'failure_reason' => 'Meter not found for the event.',
                     ]);
+
                     return;
                 }
 
@@ -147,7 +149,7 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
                         ->first();
 
                     try {
-                        if (!$meterSummary) {
+                        if (! $meterSummary) {
                             switch ($meter->period_type) {
                                 case PeriodTypeEnum::DAY:
                                     $start_at = $eventRecord->timestamp->startOfDay();
@@ -172,6 +174,7 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
                                         'failure_reason' => 'Unsupported period type for meter.',
                                     ]);
                                     Package::debug("[RecordEventJob][Failed] Unsupported period type for meter ID {$meter->id}. Event record ID {$eventRecord->id} marked as failed.");
+
                                     return; // Unsupported period type
                                     break;
                             }
@@ -236,7 +239,7 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
                                     $eventRecord->update([
                                         'status' => EventRecordStatusEnum::FAILED,
                                         'failed_at' => now(),
-                                        'failure_reason' => 'Unsupported aggregation type for meter. ' . $meter->aggregation->value,
+                                        'failure_reason' => 'Unsupported aggregation type for meter. '.$meter->aggregation->value,
                                     ]);
                                     break;
                             }
@@ -276,7 +279,7 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
                                     $eventRecord->update([
                                         'status' => EventRecordStatusEnum::FAILED,
                                         'failed_at' => now(),
-                                        'failure_reason' => 'Unsupported aggregation type for meter. ' . $meter->aggregation->value,
+                                        'failure_reason' => 'Unsupported aggregation type for meter. '.$meter->aggregation->value,
                                     ]);
                                     Package::debug("[RecordEventJob][Failed] Unsupported aggregation type for meter ID {$meter->id}. Event record ID {$eventRecord->id} marked as failed.");
                                     break;
@@ -289,7 +292,8 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
                             'failed_at' => now(),
                             'failure_reason' => $e->getMessage(),
                         ]);
-                        Package::debug("[RecordEventJob][Failed] Exception occurred while processing meter ID {$meter->id} for event record ID {$eventRecord->id}: " . $e->getMessage());
+                        Package::debug("[RecordEventJob][Failed] Exception occurred while processing meter ID {$meter->id} for event record ID {$eventRecord->id}: ".$e->getMessage());
+
                         return; // Stop processing if an error occurs
                     }
                 }
@@ -300,17 +304,19 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
                 ]);
 
                 DB::commit();
+
                 return;
             } catch (\Exception $e) {
                 if ($eventRecord) {
                     $eventRecord->update([
                         'status' => EventRecordStatusEnum::FAILED,
                         'failed_at' => now(),
-                        'failure_reason' => '(TRC) ' . $e->getMessage(),
+                        'failure_reason' => '(TRC) '.$e->getMessage(),
                     ]);
                 }
-                Package::debug("[RecordEventJob][Failed] Exception occurred while processing event record ID {$this->eventRecordId}: " . $e->getMessage());
+                Package::debug("[RecordEventJob][Failed] Exception occurred while processing event record ID {$this->eventRecordId}: ".$e->getMessage());
                 DB::rollBack();
+
                 return;
             }
         }
@@ -324,7 +330,7 @@ class RecordEventJob implements ShouldQueue, ShouldBeUnique
             $eventRecord->update([
                 'status' => EventRecordStatusEnum::FAILED,
                 'failed_at' => now(),
-                'failure_reason' => $exception ? ('(JF) ' . $exception->getMessage()) : '(JF) Unknown error',
+                'failure_reason' => $exception ? ('(JF) '.$exception->getMessage()) : '(JF) Unknown error',
             ]);
         }
     }
