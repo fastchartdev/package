@@ -3,20 +3,21 @@
 namespace Fastchartdev\Package\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
-    * @property int $id
-    * @property int $meter_id
-    * @property int $count
-    * @property string|null $scope_value
-    * @property float $value
-    * @property \Illuminate\Support\Carbon|null $start_at
-    * @property \Illuminate\Support\Carbon|null $end_at
-    * @property int|null $at
-    * @property \Illuminate\Support\Carbon|null $created_at
-    * @property \Illuminate\Support\Carbon|null $updated_at
-    * @property Meter $meter
-*/
+ * @property int $id
+ * @property int $meter_id
+ * @property int $count
+ * @property string|null $scope_value
+ * @property float $value
+ * @property Carbon|null $start_at
+ * @property Carbon|null $end_at
+ * @property int|null $at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Meter $meter
+ */
 class MeterSummary extends Model
 {
     protected $fillable = [
