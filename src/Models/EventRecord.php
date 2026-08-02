@@ -4,7 +4,23 @@ namespace Fastchartdev\Package\Models;
 
 use Fastchartdev\Package\Enums\EventRecordStatusEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $event_id
+ * @property float $value
+ * @property Carbon $timestamp
+ * @property string|null $scope_value
+ * @property EventRecordStatusEnum $status
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
+ * @property Carbon|null $failed_at
+ * @property string|null $failure_reason
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Event $event
+ */
 class EventRecord extends Model
 {
     protected $fillable = [
@@ -32,5 +48,10 @@ class EventRecord extends Model
     public function event()
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function getConnectionName()
+    {
+        return config('fastchart.connections.event_records.connection', 'sqlite');
     }
 }
