@@ -5,6 +5,21 @@ namespace Fastchartdev\Package\Models;
 use Fastchartdev\Package\Enums\EventRecordStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+    * @property int $id
+    * @property int $event_id
+    * @property float $value
+    * @property \Illuminate\Support\Carbon $timestamp
+    * @property string|null $scope_value
+    * @property EventRecordStatusEnum $status
+    * @property \Illuminate\Support\Carbon|null $started_at
+    * @property \Illuminate\Support\Carbon|null $completed_at
+    * @property \Illuminate\Support\Carbon|null $failed_at
+    * @property string|null $failure_reason
+    * @property \Illuminate\Support\Carbon|null $created_at
+    * @property \Illuminate\Support\Carbon|null $updated_at
+    * @property Event $event
+*/
 class EventRecord extends Model
 {
     protected $fillable = [

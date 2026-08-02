@@ -35,7 +35,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
 
     public function uniqueId(): string
     {
-        return $this->eventRecordId;
+        return (string) $this->eventRecordId;
     }
 
     public function uniqueVia(): Repository
@@ -115,12 +115,9 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     'started_at' => now(),
                 ]);
 
-                $project = $eventRecord->project;
                 $event = $eventRecord->event;
 
-                $meters = Meter::where('event_id', $event->id)
-                    ->where('project_id', $project->id)
-                    ->get();
+                $meters = Meter::where('event_id', $event->id)->get();
 
                 if ($meters->isEmpty()) {
                     $eventRecord->update([
@@ -134,7 +131,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
 
                 DB::connection(config('fastchart.connections.main'))->beginTransaction();
 
-                Package::debug("[RecordEventJob][Info] Processing event record ID {$eventRecord->id} for project ID {$project->id} and event ID {$event->id}");
+                Package::debug("[RecordEventJob][Info] Processing event record ID {$eventRecord->id} for event ID {$event->id}");
 
                 foreach ($meters as $meter) {
                     Package::debug("[RecordEventJob][Info] Processing meter ID {$meter->id} {$meter->period_type->value} for event record ID {$eventRecord->id}");
@@ -177,7 +174,6 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                                     Package::debug("[RecordEventJob][Failed] Unsupported period type for meter ID {$meter->id}. Event record ID {$eventRecord->id} marked as failed.");
 
                                     return; // Unsupported period type
-                                    break;
                             }
 
                             switch ($meter->aggregation) {
@@ -309,13 +305,11 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
 
                 return;
             } catch (\Exception $e) {
-                if ($eventRecord) {
-                    $eventRecord->update([
-                        'status' => EventRecordStatusEnum::FAILED,
-                        'failed_at' => now(),
-                        'failure_reason' => '(TRC) '.$e->getMessage(),
-                    ]);
-                }
+                $eventRecord->update([
+                    'status' => EventRecordStatusEnum::FAILED,
+                    'failed_at' => now(),
+                    'failure_reason' => '(TRC) '.$e->getMessage(),
+                ]);
                 Package::debug("[RecordEventJob][Failed] Exception occurred while processing event record ID {$this->eventRecordId}: ".$e->getMessage());
                 DB::connection(config('fastchart.connections.main'))->rollBack();
 

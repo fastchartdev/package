@@ -6,6 +6,15 @@ use Fastchartdev\Package\Enums\AggregationEnum;
 use Fastchartdev\Package\Enums\PeriodTypeEnum;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+    * @property int $id
+    * @property int $event_id
+    * @property AggregationEnum $aggregation
+    * @property PeriodTypeEnum $period_type
+    * @property \Illuminate\Support\Carbon|null $created_at
+    * @property \Illuminate\Support\Carbon|null $updated_at
+    * @property Event $event
+*/
 class Meter extends Model
 {
     protected $fillable = [
