@@ -132,7 +132,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     return;
                 }
 
-                DB::beginTransaction();
+                DB::connection(config('fastchart.connections.main'))->beginTransaction();
 
                 Package::debug("[RecordEventJob][Info] Processing event record ID {$eventRecord->id} for project ID {$project->id} and event ID {$event->id}");
 
@@ -168,6 +168,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                                     $end_at = $eventRecord->timestamp->endOfYear();
                                     break;
                                 default:
+                                    DB::connection(config('fastchart.connections.main'))->rollBack();
                                     $eventRecord->update([
                                         'status' => EventRecordStatusEnum::FAILED,
                                         'failed_at' => now(),
@@ -229,6 +230,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                                         'meter_id' => $meter->id,
                                         'scope_value' => $eventRecord->scope_value,
                                         'value' => $eventRecord->value,
+                                        'count' => 1,
                                         'start_at' => $start_at,
                                         'end_at' => $end_at,
                                         'at' => $at,
@@ -269,10 +271,10 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                                     Package::debug("[RecordEventJob][Updated] meter summary for meter ID {$meter->id} with new value {$eventRecord->value}, total value now {$meterSummary->value}");
                                     break;
                                 case AggregationEnum::AVG:
-                                    $currentCount = $meterSummary->value * $meterSummary->count; // Assuming value is the sum
+                                    $currentTotal = $meterSummary->value * $meterSummary->count;
                                     $newCount = $meterSummary->count + 1;
-                                    $newValue = ($currentCount + $eventRecord->value) / $newCount;
-                                    $meterSummary->update(['value' => $newValue, 'count' => $newCount]);
+                                    $newAverage = ($currentTotal + $eventRecord->value) / $newCount;
+                                    $meterSummary->update(['value' => $newAverage, 'count' => $newCount]);
                                     Package::debug("[RecordEventJob][Updated] meter summary for meter ID {$meter->id} with new value {$eventRecord->value}, total value now {$meterSummary->value}");
                                     break;
                                 default:
@@ -286,7 +288,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                             }
                         }
                     } catch (\Exception $e) {
-                        DB::rollBack();
+                        DB::connection(config('fastchart.connections.main'))->rollBack();
                         $eventRecord->update([
                             'status' => EventRecordStatusEnum::FAILED,
                             'failed_at' => now(),
@@ -303,7 +305,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     'completed_at' => now(),
                 ]);
 
-                DB::commit();
+                DB::connection(config('fastchart.connections.main'))->commit();
 
                 return;
             } catch (\Exception $e) {
@@ -315,7 +317,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     ]);
                 }
                 Package::debug("[RecordEventJob][Failed] Exception occurred while processing event record ID {$this->eventRecordId}: ".$e->getMessage());
-                DB::rollBack();
+                DB::connection(config('fastchart.connections.main'))->rollBack();
 
                 return;
             }
