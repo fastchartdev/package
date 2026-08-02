@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('event_records', function (Blueprint $table) {
+        Schema::connection(config('fastchart.connections.main.connection', 'sqlite'))->create('event_records', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Event::class)
                 ->constrained()
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('event_records');
+        Schema::connection(config('fastchart.connections.main.connection', 'sqlite'))->dropIfExists('event_records');
     }
 };

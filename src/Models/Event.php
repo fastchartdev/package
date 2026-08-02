@@ -19,4 +19,9 @@ class Event extends Model
     {
         return $this->hasMany(EventRecord::class);
     }
+
+    public function getConnectionName()
+    {
+        return config('fastchart.connections.main.connection', 'sqlite');
+    }
 }

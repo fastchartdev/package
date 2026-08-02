@@ -25,4 +25,9 @@ class Meter extends Model
     {
         return $this->belongsTo(Event::class);
     }
+
+    public function getConnectionName()
+    {
+        return config('fastchart.connections.main.connection', 'sqlite');
+    }
 }

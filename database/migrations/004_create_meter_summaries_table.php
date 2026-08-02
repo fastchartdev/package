@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('meter_summaries', function (Blueprint $table) {
+        Schema::connection(config('fastchart.connections.main.connection', 'sqlite'))->create('meter_summaries', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Meter::class)
                 ->constrained()
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('meter_summaries');
+        Schema::connection(config('fastchart.connections.main.connection', 'sqlite'))->dropIfExists('meter_summaries');
     }
 };

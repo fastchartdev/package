@@ -34,4 +34,9 @@ class MeterSummary extends Model
     {
         return $this->belongsTo(Meter::class);
     }
+
+    public function getConnectionName()
+    {
+        return config('fastchart.connections.main.connection', 'sqlite');
+    }
 }
