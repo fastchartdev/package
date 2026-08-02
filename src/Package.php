@@ -6,8 +6,7 @@ use Carbon\CarbonPeriod;
 
 class Package
 {
-    public function generateAtFromRange(string $startAt, string $endAt, string $periodType)
-    {
+    public function generateAtFromRange(\DateTimeInterface|string $startAt, \DateTimeInterface|string $endAt, string $periodType)
         $period = CarbonPeriod::create(
             ($startAt),
             '1 '.$periodType,
