@@ -10,7 +10,7 @@ use Fastchartdev\Package\Models\EventRecord;
 
 class Package
 {
-    public function recordEvent(string $eventName, mixed $value, \DateTimeInterface|string $timestamp, mixed $scopeValue)
+public function recordEvent(string $eventName, float|int $value, \DateTimeInterface|string $timestamp, string $scopeValue): EventRecord
     {
         $event = Event::where('name', $eventName)
             ->first();
