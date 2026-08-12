@@ -2,13 +2,11 @@
 
 namespace Fastchartdev\Package;
 
-use Fastchartdev\Package\Models\Event;
-use Fastchartdev\Package\Models\EventRecord;
-use Fastchartdev\Package\Enums\EventRecordStatus;
-use Fastchartdev\Package\Jobs\RecordEventJob;
-
 use Carbon\CarbonPeriod;
 use Fastchartdev\Package\Enums\EventRecordStatusEnum;
+use Fastchartdev\Package\Jobs\RecordEventJob;
+use Fastchartdev\Package\Models\Event;
+use Fastchartdev\Package\Models\EventRecord;
 
 class Package
 {
@@ -17,7 +15,7 @@ class Package
         $event = Event::where('name', $eventName)
             ->first();
 
-        if (!$event) {
+        if (! $event) {
             $event = Event::create([
                 'name' => $eventName,
             ]);
@@ -43,7 +41,7 @@ class Package
     {
         $period = CarbonPeriod::create(
             ($startAt),
-            '1 ' . $periodType,
+            '1 '.$periodType,
             ($endAt)
         );
 
