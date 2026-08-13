@@ -59,13 +59,13 @@ class Package
             return QueryResultData::collect([]);
         }
 
-        $query = MeterSummary::query()
+        $summaries = MeterSummary::query()
             ->where('meter_id', $meter->id)
             ->where('scope_value', $scopeValue)
             ->whereIn('at', $ats)
             ->get();
 
-        return QueryResultData::collect($query);
+        return QueryResultData::collect($summaries);
     }
 
     public function recordEvent(string $eventName, float|int $value, \DateTimeInterface|string $timestamp, string $scopeValue): EventRecord
