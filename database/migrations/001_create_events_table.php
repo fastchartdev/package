@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::connection(config('fastchart.connections.main.connection', 'sqlite'))->create('events', function (Blueprint $table) {
+        Schema::connection(config('fastchart.database.n.connection', 'sqlite'))->create('events', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->timestamps();
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::connection(config('fastchart.connections.main.connection', 'sqlite'))->dropIfExists('events');
+        Schema::connection(config('fastchart.database.n.connection', 'sqlite'))->dropIfExists('events');
     }
 };
