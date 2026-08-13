@@ -2,14 +2,14 @@
 
 namespace Fastchartdev\Package;
 
-use Fastchartdev\Package\Exceptions\EventNotFoundException;
-use Fastchartdev\Package\Exceptions\LimitExceededException;
-use Fastchartdev\Package\Enums\PeriodTypeEnum;
-use Fastchartdev\Package\Enums\AggregationEnum;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Fastchartdev\Package\Data\QueryResultData;
+use Fastchartdev\Package\Enums\AggregationEnum;
 use Fastchartdev\Package\Enums\EventRecordStatusEnum;
+use Fastchartdev\Package\Enums\PeriodTypeEnum;
+use Fastchartdev\Package\Exceptions\EventNotFoundException;
+use Fastchartdev\Package\Exceptions\LimitExceededException;
 use Fastchartdev\Package\Jobs\RecordEventJob;
 use Fastchartdev\Package\Models\Event;
 use Fastchartdev\Package\Models\EventRecord;
@@ -34,19 +34,19 @@ class Package
 
         if ($periodType === PeriodTypeEnum::DAY) {
             if ($startAt->diffInDays($endAt) > 31) {
-                throw new LimitExceededException('The range between start_at and end_at should not be more than 31 days for ' . $periodType->value . ' period type');
+                throw new LimitExceededException('The range between start_at and end_at should not be more than 31 days for '.$periodType->value.' period type');
             }
         } elseif ($periodType === PeriodTypeEnum::WEEK) {
             if ($startAt->diffInWeeks($endAt) > 12) {
-                throw new LimitExceededException('The range between start_at and end_at should not be more than 3 months for ' . $periodType->value . ' period type');
+                throw new LimitExceededException('The range between start_at and end_at should not be more than 3 months for '.$periodType->value.' period type');
             }
         } elseif ($periodType === PeriodTypeEnum::MONTH) {
             if ($startAt->diffInMonths($endAt) > 12) {
-                throw new LimitExceededException('The range between start_at and end_at should not be more than 1 year for ' . $periodType->value   . ' period type');
+                throw new LimitExceededException('The range between start_at and end_at should not be more than 1 year for '.$periodType->value.' period type');
             }
         } elseif ($periodType === PeriodTypeEnum::YEAR) {
             if ($startAt->diffInYears($endAt) > 5) {
-                throw new LimitExceededException('The range between start_at and end_at should not be more than 5 years for ' . $periodType->value . ' period type');
+                throw new LimitExceededException('The range between start_at and end_at should not be more than 5 years for '.$periodType->value.' period type');
             }
         }
 
