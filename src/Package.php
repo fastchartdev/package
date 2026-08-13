@@ -37,15 +37,15 @@ class Package
                 throw new LimitExceededException('The range between start_at and end_at should not be more than 31 days for '.$periodType->value.' period type');
             }
         } elseif ($periodType === PeriodTypeEnum::WEEK) {
-            if ($startAt->diffInWeeks($endAt) > 12) {
+            if ($endAt->gt($startAt->copy()->addWeeks(12))) {
                 throw new LimitExceededException('The range between start_at and end_at should not be more than 3 months for '.$periodType->value.' period type');
             }
         } elseif ($periodType === PeriodTypeEnum::MONTH) {
-            if ($startAt->diffInMonths($endAt) > 12) {
+            if ($endAt->gt($startAt->copy()->addMonths(12))) {
                 throw new LimitExceededException('The range between start_at and end_at should not be more than 1 year for '.$periodType->value.' period type');
             }
         } elseif ($periodType === PeriodTypeEnum::YEAR) {
-            if ($startAt->diffInYears($endAt) > 5) {
+            if ($endAt->gt($startAt->copy()->addYears(5))) {
                 throw new LimitExceededException('The range between start_at and end_at should not be more than 5 years for '.$periodType->value.' period type');
             }
         }
