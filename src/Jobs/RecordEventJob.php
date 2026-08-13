@@ -129,7 +129,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     return;
                 }
 
-                DB::connection(config('fastchart.connections.main'))->beginTransaction();
+                DB::connection(config('fastchart.database.main'))->beginTransaction();
 
                 Package::debug("[RecordEventJob][Info] Processing event record ID {$eventRecord->id} for event ID {$event->id}");
 
@@ -165,7 +165,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                                     $end_at = $eventRecord->timestamp->endOfYear();
                                     break;
                                 default:
-                                    DB::connection(config('fastchart.connections.main'))->rollBack();
+                                    DB::connection(config('fastchart.database.main'))->rollBack();
                                     $eventRecord->update([
                                         'status' => EventRecordStatusEnum::FAILED,
                                         'failed_at' => now(),
@@ -284,7 +284,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                             }
                         }
                     } catch (\Exception $e) {
-                        DB::connection(config('fastchart.connections.main'))->rollBack();
+                        DB::connection(config('fastchart.database.main'))->rollBack();
                         $eventRecord->update([
                             'status' => EventRecordStatusEnum::FAILED,
                             'failed_at' => now(),
@@ -301,7 +301,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     'completed_at' => now(),
                 ]);
 
-                DB::connection(config('fastchart.connections.main'))->commit();
+                DB::connection(config('fastchart.database.main'))->commit();
 
                 return;
             } catch (\Exception $e) {
@@ -311,7 +311,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     'failure_reason' => '(TRC) '.$e->getMessage(),
                 ]);
                 Package::debug("[RecordEventJob][Failed] Exception occurred while processing event record ID {$this->eventRecordId}: ".$e->getMessage());
-                DB::connection(config('fastchart.connections.main'))->rollBack();
+                DB::connection(config('fastchart.database.main'))->rollBack();
 
                 return;
             }

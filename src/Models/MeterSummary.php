@@ -51,6 +51,6 @@ class MeterSummary extends Model
 
     public function getConnectionName()
     {
-        return config('fastchart.connections.main.connection', 'sqlite');
+        return config('fastchart.database.main.connection', 'sqlite');
     }
 }

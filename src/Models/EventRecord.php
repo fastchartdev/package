@@ -52,6 +52,6 @@ class EventRecord extends Model
 
     public function getConnectionName()
     {
-        return config('fastchart.connections.event_records.connection', 'sqlite');
+        return config('fastchart.database.event_records.connection', 'sqlite');
     }
 }

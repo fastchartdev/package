@@ -22,12 +22,12 @@ return [
         ],
     ],
 
-    'connections' => [
+    'database' => [
         'main' => [
             'connection' => env('FASTCHART_DB_CONNECTION', env('DB_CONNECTION', 'sqlite')),
         ],
         'event_records' => [
-            'connection' => env('FASTCHART_DB_EVENT_RECORDS_CONNECTION', config('fastchart.connections.main.connection', 'sqlite')),
+            'connection' => env('FASTCHART_DB_EVENT_RECORDS_CONNECTION', config('fastchart.database.main.connection', 'sqlite')),
         ],
     ],
 ];
