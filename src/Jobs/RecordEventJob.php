@@ -15,6 +15,7 @@ use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -120,13 +121,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                 $meters = Meter::where('event_id', $event->id)->get();
 
                 if ($meters->isEmpty()) {
-                    $eventRecord->update([
-                        'status' => EventRecordStatusEnum::FAILED,
-                        'failed_at' => now(),
-                        'failure_reason' => 'Meter not found for the event.',
-                    ]);
-
-                    return;
+                    $meters = $this->createMeters($event);
                 }
 
                 DB::connection(config('fastchart.database.main'))->beginTransaction();
@@ -329,5 +324,23 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                 'failure_reason' => $exception ? ('(JF) '.$exception->getMessage()) : '(JF) Unknown error',
             ]);
         }
+    }
+
+    private function createMeters($event): Collection
+    {
+        $meters = collect();
+
+        foreach (AggregationEnum::cases() as $aggregation) {
+            foreach (PeriodTypeEnum::cases() as $periodType) {
+                $meter = Meter::firstOrCreate([
+                    'aggregation' => $aggregation->value,
+                    'period_type' => $periodType->value,
+                ]);
+
+                $meters->push($meter);
+            }
+        }
+
+        return $meters;
     }
 }
