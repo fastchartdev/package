@@ -124,7 +124,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     $meters = $this->createMeters($event);
                 }
 
-                DB::connection(config('fastchart.database.main.connection'))->beginTransaction();
+                DB::connection(config('fastchart.database.main.connection', 'sqlite'))->beginTransaction();
 
                 Package::debug("[RecordEventJob][Info] Processing event record ID {$eventRecord->id} for event ID {$event->id}");
 
@@ -160,7 +160,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                                     $end_at = $eventRecord->timestamp->endOfYear();
                                     break;
                                 default:
-                                    DB::connection(config('fastchart.database.main.connection'))->rollBack();
+                                    DB::connection(config('fastchart.database.main.connection', 'sqlite'))->rollBack();
                                     $eventRecord->update([
                                         'status' => EventRecordStatusEnum::FAILED,
                                         'failed_at' => now(),
@@ -279,7 +279,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                             }
                         }
                     } catch (\Exception $e) {
-                        DB::connection(config('fastchart.database.main.connection'))->rollBack();
+                        DB::connection(config('fastchart.database.main.connection', 'sqlite'))->rollBack();
                         $eventRecord->update([
                             'status' => EventRecordStatusEnum::FAILED,
                             'failed_at' => now(),
@@ -296,7 +296,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     'completed_at' => now(),
                 ]);
 
-                DB::connection(config('fastchart.database.main.connection'))->commit();
+                DB::connection(config('fastchart.database.main.connection', 'sqlite'))->commit();
 
                 return;
             } catch (\Exception $e) {
@@ -306,7 +306,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                     'failure_reason' => str('(TRC) '.$e->getMessage())->limit(255),
                 ]);
                 Package::debug("[RecordEventJob][Failed] Exception occurred while processing event record ID {$this->eventRecordId}: ".$e->getMessage());
-                DB::connection(config('fastchart.database.main.connection'))->rollBack();
+                DB::connection(config('fastchart.database.main.connection', 'sqlite'))->rollBack();
 
                 return;
             }
