@@ -283,7 +283,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                         $eventRecord->update([
                             'status' => EventRecordStatusEnum::FAILED,
                             'failed_at' => now(),
-                            'failure_reason' => $e->getMessage(),
+                            'failure_reason' => str($e->getMessage())->limit(255),
                         ]);
                         Package::debug("[RecordEventJob][Failed] Exception occurred while processing meter ID {$meter->id} for event record ID {$eventRecord->id}: ".$e->getMessage());
 
@@ -303,7 +303,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
                 $eventRecord->update([
                     'status' => EventRecordStatusEnum::FAILED,
                     'failed_at' => now(),
-                    'failure_reason' => '(TRC) '.$e->getMessage(),
+                    'failure_reason' => str('(TRC) '.$e->getMessage())->limit(255),
                 ]);
                 Package::debug("[RecordEventJob][Failed] Exception occurred while processing event record ID {$this->eventRecordId}: ".$e->getMessage());
                 DB::connection(config('fastchart.database.main'))->rollBack();
@@ -321,7 +321,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
             $eventRecord->update([
                 'status' => EventRecordStatusEnum::FAILED,
                 'failed_at' => now(),
-                'failure_reason' => $exception ? ('(JF) '.$exception->getMessage()) : '(JF) Unknown error',
+                'failure_reason' => str(($exception ? ('(JF) '.$exception->getMessage()) : '(JF) Unknown error'))->limit(255),
             ]);
         }
     }
@@ -333,6 +333,7 @@ class RecordEventJob implements ShouldBeUnique, ShouldQueue
         foreach (AggregationEnum::cases() as $aggregation) {
             foreach (PeriodTypeEnum::cases() as $periodType) {
                 $meter = Meter::firstOrCreate([
+                    'event_id' => $event->id,
                     'aggregation' => $aggregation->value,
                     'period_type' => $periodType->value,
                 ]);
