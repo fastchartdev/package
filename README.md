@@ -1,84 +1,155 @@
-# This is my package package
+# FastChart
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/fastchartdev/package.svg?style=flat-square)](https://packagist.org/packages/fastchartdev/package)
-[![GitHub Tests Action Status](https://github.com/spatie/package-package-laravel/actions/workflows/run-tests.yml/badge.svg)](https://github.com/fastchartdev/package/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://github.com/spatie/package-package-laravel/actions/workflows/fix-php-code-style-issues.yml/badge.svg)](https://github.com/fastchartdev/package/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/fastchartdev/package.svg?style=flat-square)](https://packagist.org/packages/fastchartdev/package)
+FastChart records numeric events and maintains queryable summaries for each event, scope, aggregation, and time period. It is useful for application metrics such as orders, revenue, API usage, or sensor readings.
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+Each recorded event is summarized as `sum`, `avg`, `count`, `min`, and `max` across daily, weekly, monthly, and yearly periods.
 
-## Support us
+## Requirements
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/package.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/package)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+- PHP 8.3 or later
+- Laravel 11, 12, or 13
 
 ## Installation
 
-You can install the package via composer:
+Install the package with Composer:
 
 ```bash
 composer require fastchartdev/package
 ```
 
-You can publish and run the migrations with:
+Laravel discovers the package automatically. Publish its configuration and migrations, then run the migrations:
 
 ```bash
+php artisan vendor:publish --tag="package-config"
 php artisan vendor:publish --tag="package-migrations"
 php artisan migrate
 ```
 
-You can publish the config file with:
+The package stores event records and aggregates in four tables: `events`, `event_records`, `meters`, and `meter_summaries`.
 
-```bash
-php artisan vendor:publish --tag="package-config"
-```
+## Configuration
 
-This is the contents of the published config file:
+The published `config/fastchart.php` file controls logging, queues, and database connections:
 
 ```php
 return [
+    'debug' => env('FASTCHART_DEBUG', false),
+
+    'queues' => [
+        'main' => [
+            'connection' => env('FASTCHART_QUEUE_CONNECTION', env('QUEUE_CONNECTION', 'sync')),
+            'queue' => env('FASTCHART_QUEUE_NAME', 'event-records'),
+            'unique_via_cache_driver' => env('FASTCHART_QUEUE_UNIQUE_VIA_CACHE_DRIVER', 'redis'),
+        ],
+    ],
+
+    'database' => [
+        'main' => [
+            'connection' => env('FASTCHART_DB_CONNECTION', env('DB_CONNECTION', 'sqlite')),
+        ],
+        'event_records' => [
+            'connection' => env(
+                'FASTCHART_DB_EVENT_RECORDS_CONNECTION',
+                config('fastchart.database.main.connection', 'sqlite'),
+            ),
+        ],
+    ],
 ];
 ```
 
-Optionally, you can publish the views using
+By default, all package tables use the application's configured database connection. Set `FASTCHART_DB_EVENT_RECORDS_CONNECTION` when event records should be written to a separate connection. The configured cache driver must support Laravel's unique jobs when processing events asynchronously.
 
-```bash
-php artisan vendor:publish --tag="package-views"
-```
+## Recording events
 
-## Usage
+Use the facade to record a numeric value for an event. A scope distinguishes independent streams of the same event—for example, a tenant, user, store, or device.
 
 ```php
-$package = new Fastchartdev\Package();
-echo $package->echoPhrase('Hello, Fastchartdev!');
+use Fastchartdev\Package\Facades\Package;
+
+Package::recordEvent(
+    eventName: 'orders',
+    value: 125.50,
+    timestamp: now(),
+    scopeValue: 'store-42',
+);
+```
+
+The call creates the event automatically when needed, persists an event record, and dispatches a job to update all summaries. Its returned value is the created `EventRecord` model.
+
+When a queue connection other than `sync` is configured, run a worker for the configured queue:
+
+```bash
+php artisan queue:work --queue=event-records
+```
+
+## Querying summaries
+
+Query an aggregation for an event, scope, date range, and period type:
+
+```php
+use Fastchartdev\Package\Enums\AggregationEnum;
+use Fastchartdev\Package\Enums\PeriodTypeEnum;
+use Fastchartdev\Package\Facades\Package;
+
+$summaries = Package::query(
+    aggregateFunction: AggregationEnum::SUM,
+    eventName: 'orders',
+    scopeValue: 'store-42',
+    startAt: '2026-01-01',
+    endAt: '2026-01-31',
+    periodType: PeriodTypeEnum::DAY,
+);
+```
+
+The result is a collection of `QueryResultData` objects. Each item contains:
+
+```php
+[
+    'value' => 125.50,
+    'start_at' => '2026-01-01 00:00:00',
+    'end_at' => '2026-01-01 23:59:59',
+]
+```
+
+An unknown event raises `EventNotFoundException`. If no matching meter exists yet, the query returns an empty collection. Meters are created when the first record for an event is processed.
+
+### Available aggregations
+
+```php
+AggregationEnum::SUM;
+AggregationEnum::AVG;
+AggregationEnum::COUNT;
+AggregationEnum::MIN;
+AggregationEnum::MAX;
+```
+
+### Available periods and range limits
+
+| Period | Enum | Maximum query range |
+| --- | --- | --- |
+| Daily | `PeriodTypeEnum::DAY` | 31 days |
+| Weekly | `PeriodTypeEnum::WEEK` | 3 months |
+| Monthly | `PeriodTypeEnum::MONTH` | 1 year |
+| Yearly | `PeriodTypeEnum::YEAR` | 5 years |
+
+Requests beyond these limits raise `LimitExceededException`.
+
+## Debug logging
+
+Set `FASTCHART_DEBUG=true` to write package processing messages to Laravel's log:
+
+```dotenv
+FASTCHART_DEBUG=true
 ```
 
 ## Testing
+
+From the package directory:
 
 ```bash
 composer test
 ```
 
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [salah eddine bendyab](https://github.com/64494826+salahhusa9)
-- [All Contributors](../../contributors)
-
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+FastChart is open-sourced software licensed under the [MIT license](LICENSE.md).
